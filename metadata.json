@@ -1,0 +1,8 @@
+{
+  "name": "AutoForge AI - 管理员版本",
+  "description": "An intelligent multi-agent platform for generating software from single-sentence requirements, featuring collaborative workflows between PM, Product, Design, Dev, and QA agents.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
