@@ -3,6 +3,22 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { AgentRole, AgentConfig, ProjectState, ProjectEvaluation } from "../types.ts";
 import { authService } from "./authService.ts";
 
+/**
+ * Helper to get the API Key from the environment
+ */
+const getApiKey = () => {
+  // Always prioritize the built-in configuration if provided by the admin
+  const builtInConfig = authService.getBuiltInEngineConfig();
+  if (builtInConfig?.apiKey) return builtInConfig.apiKey;
+  
+  // Fallback to the environment variable injected during build/execution
+  try {
+    return process.env.API_KEY || "";
+  } catch (e) {
+    return "";
+  }
+};
+
 async function callLlmApi(baseUrl: string, model: string, apiKey: string, systemPrompt: string, userPrompt: string) {
   const url = `${baseUrl.replace(/\/$/, '')}/chat/completions`;
   const response = await fetch(url, {
@@ -72,7 +88,7 @@ export const generateAgentOutput = async (
     }
     
     输出格式要求：
-    1. 必须在 <thought> 标签中包含你的推理过程、决策逻辑。
+    1. 必须在 <thought> 中包含你的推理过程、决策逻辑。
     2. 必须在 <output> 标签中包含你的正式交付成果（Markdown 格式，如果是设计师则包含 HTML）。
   `;
 
@@ -83,7 +99,7 @@ export const generateAgentOutput = async (
       const builtInConfig = authService.getBuiltInEngineConfig();
       
       if (builtInConfig.provider === 'gemini') {
-        const apiKey = builtInConfig.apiKey || (typeof process !== 'undefined' ? process.env.API_KEY : '') || "";
+        const apiKey = getApiKey();
         const ai = new GoogleGenAI({ apiKey });
         const response = await ai.models.generateContent({
           model: builtInConfig.model,
@@ -145,7 +161,7 @@ export const evolveAgentMatrix = async (
   try {
     let text = "";
     if (builtInConfig.provider === 'gemini') {
-      const apiKey = builtInConfig.apiKey || (typeof process !== 'undefined' ? process.env.API_KEY : '') || "";
+      const apiKey = getApiKey();
       const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
         model: builtInConfig.model,
