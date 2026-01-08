@@ -86,11 +86,12 @@ export const generateAgentOutput = async (
     let text = "";
 
     if (agent.engine === 'gemini') {
-      // 这里的 'gemini' 映射为平台内置引擎，读取管理员配置
       const builtInConfig = authService.getBuiltInEngineConfig();
       
       if (builtInConfig.provider === 'gemini') {
-        const ai = new GoogleGenAI({ apiKey: builtInConfig.apiKey || (process.env.API_KEY as string) });
+        // 适配 Vercel 环境变量: 优先使用管理员手动配置的 Key，其次使用 Vercel 注入的 API_KEY
+        const apiKey = builtInConfig.apiKey || process.env.API_KEY || "";
+        const ai = new GoogleGenAI({ apiKey });
         const response = await ai.models.generateContent({
           model: builtInConfig.model,
           contents: prompt,
@@ -103,11 +104,9 @@ export const generateAgentOutput = async (
         });
         text = response.text || "";
       } else {
-        // 使用管理员配置的兼容 API
         text = await callLlmApi(builtInConfig.baseUrl, builtInConfig.model, builtInConfig.apiKey, agent.systemPrompt, prompt);
       }
     } else {
-      // 路径 B: 用户在 Agent Config 中自定义的第三方 API 调用
       text = await callLlmApi(agent.baseUrl, agent.model, agent.apiKey || '', agent.systemPrompt, prompt);
     }
 
@@ -128,7 +127,7 @@ export const generateAgentOutput = async (
 };
 
 /**
- * 矩阵进化逻辑：使用管理员配置的最高性能模型进行元学习
+ * 矩阵进化逻辑
  */
 export const evolveAgentMatrix = async (
   project: ProjectState,
@@ -156,7 +155,8 @@ export const evolveAgentMatrix = async (
   try {
     let text = "";
     if (builtInConfig.provider === 'gemini') {
-      const ai = new GoogleGenAI({ apiKey: builtInConfig.apiKey || (process.env.API_KEY as string) });
+      const apiKey = builtInConfig.apiKey || process.env.API_KEY || "";
+      const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
         model: builtInConfig.model,
         contents: prompt,
