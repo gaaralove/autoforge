@@ -10,14 +10,14 @@ import {
   SystemLog, 
   User, 
   PaymentConfig 
-} from './types';
-import { INITIAL_AGENTS, ROLE_ICONS, ROLE_COLORS } from './constants';
-import { generateAgentOutput, evolveAgentMatrix } from './services/geminiService';
-import { authService } from './services/authService';
-import AgentConfigPanel from './components/AgentConfigPanel';
-import ResultDisplay from './components/ResultDisplay';
-import AuthBarrier from './components/AuthBarrier';
-import AdminDashboard from './components/AdminDashboard';
+} from './types.ts';
+import { INITIAL_AGENTS, ROLE_ICONS, ROLE_COLORS } from './constants.tsx';
+import { generateAgentOutput, evolveAgentMatrix } from './services/geminiService.ts';
+import { authService } from './services/authService.ts';
+import AgentConfigPanel from './components/AgentConfigPanel.tsx';
+import ResultDisplay from './components/ResultDisplay.tsx';
+import AuthBarrier from './components/AuthBarrier.tsx';
+import AdminDashboard from './components/AdminDashboard.tsx';
 import { 
   Rocket, 
   Settings2, 
@@ -33,8 +33,7 @@ import {
   X, 
   ShieldEllipsis, 
   Zap, 
-  RefreshCw,
-  MoreVertical
+  RefreshCw
 } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -45,7 +44,6 @@ const App: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeTab, setActiveTab] = useState<'workflow' | 'config' | 'admin'>('workflow');
 
-  // 用户操作面板状态
   const [showUserPopover, setShowUserPopover] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [oldPwd, setOldPwd] = useState('');
@@ -54,7 +52,6 @@ const App: React.FC = () => {
 
   const userPopoverRef = useRef<HTMLDivElement>(null);
 
-  // 修复：点击外部关闭用户面板
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (userPopoverRef.current && !userPopoverRef.current.contains(event.target as Node)) {
@@ -69,22 +66,15 @@ const App: React.FC = () => {
     };
   }, [showUserPopover]);
 
-  /**
-   * 彻底注销当前会话并返回登录屏
-   */
   const handleLogout = () => {
     if (confirm('警告：确定要断开与神经工厂的连接并注销身份吗？')) {
       authService.logout();
       setUser(null);
       setShowUserPopover(false);
-      // 强制刷新以重置整个应用状态
       window.location.reload();
     }
   };
 
-  /**
-   * 切换身份逻辑 - 本质上是先注销再让用户重新登录
-   */
   const handleSwitchAccount = () => {
     if (confirm('正在安全切断当前神经链路... 确定要切换至另一个身份登录吗？')) {
       authService.logout();
@@ -246,14 +236,12 @@ const App: React.FC = () => {
     setIsProcessing(false);
   };
 
-  // 准入拦截逻辑
   if (!user || (!user.activatedCode && user.role !== 'admin')) {
     return <AuthBarrier onAuthenticated={u => setUser(u)} />;
   }
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-[var(--bg-main)] text-[var(--text-main)] selection:bg-blue-500/30">
-      {/* 侧边导航 */}
       <aside className="w-20 bg-[var(--bg-sidebar)] border-r border-[var(--glass-border)] flex flex-col items-center py-8 gap-8 shrink-0 backdrop-blur-3xl z-50">
         <div className="w-12 h-12 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-2xl animate-pulse shrink-0">
           <BrainCircuit size={28} className="text-white" />
@@ -273,7 +261,6 @@ const App: React.FC = () => {
           )}
         </nav>
 
-        {/* 底部账户操作区域 */}
         <div className="flex flex-col gap-5 items-center pb-4 relative" ref={userPopoverRef}>
            <button 
              onClick={() => setShowUserPopover(!showUserPopover)}
@@ -283,7 +270,6 @@ const App: React.FC = () => {
              <UserIcon size={20} />
            </button>
            
-           {/* 账户悬浮菜单 - 确保包含注销和切换身份按钮 */}
            <div className={`absolute left-full bottom-0 pl-4 transition-all z-[100] duration-300 ${showUserPopover ? 'opacity-100 translate-x-0 pointer-events-auto' : 'opacity-0 translate-x-4 pointer-events-none'}`}>
               <div className="w-72 bg-[#0f172a] border border-white/10 rounded-[2.5rem] p-6 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)] backdrop-blur-3xl relative">
                  <div className="flex items-center gap-4 mb-5">
@@ -326,7 +312,6 @@ const App: React.FC = () => {
         </div>
       </aside>
 
-      {/* 主工作区 */}
       <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-[var(--bg-main)]">
         <header className="h-16 border-b border-[var(--glass-border)] flex items-center justify-between px-8 bg-[var(--bg-main)]/50 backdrop-blur-3xl shrink-0 z-40">
           <div className="flex items-center gap-4">
@@ -412,7 +397,6 @@ const App: React.FC = () => {
         )}
       </main>
 
-      {/* 修改密码弹窗 */}
       {showPasswordModal && (
         <div className="fixed inset-0 z-[250] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in">
            <div className="bg-slate-900 border border-slate-700 w-full max-w-md rounded-[2.5rem] p-10 space-y-8 shadow-3xl">

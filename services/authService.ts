@@ -1,5 +1,5 @@
 
-import { User, InvitationCode, PaymentOrder, PaymentConfig, MembershipStatus, BuiltInEngineConfig } from '../types';
+import { User, InvitationCode, PaymentOrder, PaymentConfig, BuiltInEngineConfig } from '../types.ts';
 
 const USERS_KEY = 'autoforge_users_v3';
 const SESSION_KEY = 'autoforge_current_user_v3';
@@ -18,49 +18,49 @@ const neuralHash = (str: string) => {
   return Math.abs(hash).toString(16);
 };
 
-// Initial setup
-if (!localStorage.getItem(USERS_KEY)) {
-  const adminUser: User = {
-    username: 'admin',
-    email: 'admin@autoforge.ai',
-    password: neuralHash('Lulu1990'),
-    role: 'admin',
-    activatedCode: 'SYSTEM-ROOT',
-    membershipStatus: 'member',
-    expiryDate: Date.now() + 100 * 365 * 24 * 60 * 60 * 1000, 
-    createdAt: Date.now()
-  };
-  localStorage.setItem(USERS_KEY, JSON.stringify([adminUser]));
-}
+if (typeof localStorage !== 'undefined') {
+  if (!localStorage.getItem(USERS_KEY)) {
+    const adminUser: User = {
+      username: 'admin',
+      email: 'admin@autoforge.ai',
+      password: neuralHash('Lulu1990'),
+      role: 'admin',
+      activatedCode: 'SYSTEM-ROOT',
+      membershipStatus: 'member',
+      expiryDate: Date.now() + 100 * 365 * 24 * 60 * 60 * 1000, 
+      createdAt: Date.now()
+    };
+    localStorage.setItem(USERS_KEY, JSON.stringify([adminUser]));
+  }
 
-if (!localStorage.getItem(CODES_KEY)) {
-  const initialCodes: InvitationCode[] = [
-    { code: 'AF-TRIAL-7DAYS-001', usedBy: null, createdAt: Date.now() },
-    { code: 'AF-NEURAL-KEY-888', usedBy: null, createdAt: Date.now() }
-  ];
-  localStorage.setItem(CODES_KEY, JSON.stringify(initialCodes));
-}
+  if (!localStorage.getItem(CODES_KEY)) {
+    const initialCodes: InvitationCode[] = [
+      { code: 'AF-TRIAL-7DAYS-001', usedBy: null, createdAt: Date.now() },
+      { code: 'AF-NEURAL-KEY-888', usedBy: null, createdAt: Date.now() }
+    ];
+    localStorage.setItem(CODES_KEY, JSON.stringify(initialCodes));
+  }
 
-if (!localStorage.getItem(CONFIG_KEY)) {
-  const defaultConfig: PaymentConfig = {
-    alipayEnabled: true,
-    wechatEnabled: true,
-    alipayQr: '', 
-    wechatQr: '', 
-    price: 199
-  };
-  localStorage.setItem(CONFIG_KEY, JSON.stringify(defaultConfig));
-}
+  if (!localStorage.getItem(CONFIG_KEY)) {
+    const defaultConfig: PaymentConfig = {
+      alipayEnabled: true,
+      wechatEnabled: true,
+      alipayQr: '', 
+      wechatQr: '', 
+      price: 199
+    };
+    localStorage.setItem(CONFIG_KEY, JSON.stringify(defaultConfig));
+  }
 
-// 确保默认引擎为 Gemini
-if (!localStorage.getItem(ENGINE_CONFIG_KEY)) {
-  const defaultEngine: BuiltInEngineConfig = {
-    provider: 'gemini',
-    baseUrl: 'https://generativelanguage.googleapis.com',
-    model: 'gemini-3-flash-preview',
-    apiKey: ''
-  };
-  localStorage.setItem(ENGINE_CONFIG_KEY, JSON.stringify(defaultEngine));
+  if (!localStorage.getItem(ENGINE_CONFIG_KEY)) {
+    const defaultEngine: BuiltInEngineConfig = {
+      provider: 'gemini',
+      baseUrl: 'https://generativelanguage.googleapis.com',
+      model: 'gemini-3-flash-preview',
+      apiKey: ''
+    };
+    localStorage.setItem(ENGINE_CONFIG_KEY, JSON.stringify(defaultEngine));
+  }
 }
 
 export const authService = {
@@ -70,7 +70,7 @@ export const authService = {
   getInvitationCodes: (): InvitationCode[] => JSON.parse(localStorage.getItem(CODES_KEY) || '[]'),
   getOrders: (): PaymentOrder[] => JSON.parse(localStorage.getItem(ORDERS_KEY) || '[]'),
   getPaymentConfig: (): PaymentConfig => JSON.parse(localStorage.getItem(CONFIG_KEY) || '{}'),
-  getBuiltInEngineConfig: (): BuiltInEngineConfig => JSON.parse(localStorage.getItem(ENGINE_CONFIG_KEY) || '{}'),
+  getBuiltInEngineConfig: (): BuiltInEngineConfig => JSON.parse(localStorage.getItem(ENGINE_CONFIG_KEY) || '{"provider":"gemini","model":"gemini-3-flash-preview","baseUrl":"","apiKey":""}'),
 
   getCurrentUser: (): User | null => {
     const data = localStorage.getItem(SESSION_KEY);

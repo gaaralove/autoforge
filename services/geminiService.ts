@@ -1,11 +1,8 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { AgentRole, AgentConfig, ProjectState, ProjectEvaluation, BuiltInEngineConfig } from "../types";
-import { authService } from "./authService";
+import { AgentRole, AgentConfig, ProjectState, ProjectEvaluation } from "../types.ts";
+import { authService } from "./authService.ts";
 
-/**
- * 封装通用大模型 API 调用 (支持 OpenAI 兼容格式)
- */
 async function callLlmApi(baseUrl: string, model: string, apiKey: string, systemPrompt: string, userPrompt: string) {
   const url = `${baseUrl.replace(/\/$/, '')}/chat/completions`;
   const response = await fetch(url, {
@@ -34,9 +31,6 @@ async function callLlmApi(baseUrl: string, model: string, apiKey: string, system
   return data.choices?.[0]?.message?.content || "";
 }
 
-/**
- * 核心生成逻辑：根据 Agent 配置的 engine 分发
- */
 export const generateAgentOutput = async (
   agent: AgentConfig,
   requirement: string,
@@ -89,8 +83,7 @@ export const generateAgentOutput = async (
       const builtInConfig = authService.getBuiltInEngineConfig();
       
       if (builtInConfig.provider === 'gemini') {
-        // 适配 Vercel 环境变量: 优先使用管理员手动配置的 Key，其次使用 Vercel 注入的 API_KEY
-        const apiKey = builtInConfig.apiKey || process.env.API_KEY || "";
+        const apiKey = builtInConfig.apiKey || (typeof process !== 'undefined' ? process.env.API_KEY : '') || "";
         const ai = new GoogleGenAI({ apiKey });
         const response = await ai.models.generateContent({
           model: builtInConfig.model,
@@ -126,9 +119,6 @@ export const generateAgentOutput = async (
   }
 };
 
-/**
- * 矩阵进化逻辑
- */
 export const evolveAgentMatrix = async (
   project: ProjectState,
   evaluation: ProjectEvaluation,
@@ -155,7 +145,7 @@ export const evolveAgentMatrix = async (
   try {
     let text = "";
     if (builtInConfig.provider === 'gemini') {
-      const apiKey = builtInConfig.apiKey || process.env.API_KEY || "";
+      const apiKey = builtInConfig.apiKey || (typeof process !== 'undefined' ? process.env.API_KEY : '') || "";
       const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
         model: builtInConfig.model,
