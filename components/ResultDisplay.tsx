@@ -1,5 +1,6 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { AgentRole, StepStatus, ProjectState, ContentVersion, ProjectEvaluation } from '../types';
 import { 
   CheckCircle, Send, Brain, ChevronDown, ChevronUp, Sparkles, MessageSquareQuote, 
@@ -308,10 +309,10 @@ const VersionItem: React.FC<{
                 </div>
               </div>
               <div className="flex gap-3">
-                <button onClick={handleDownload} className="p-3 bg-[var(--glass-border)] hover:bg-emerald-500/20 text-[var(--text-muted)] hover:text-emerald-400 rounded-xl transition-all">
+                <button onClick={handleDownload} className="p-3 bg-[var(--glass-border)] hover:bg-emerald-500/20 text-[var(--text-muted)] hover:text-emerald-400 rounded-xl transition-all" title="下载源码">
                   <Download size={18} />
                 </button>
-                <button onClick={() => setIsFullscreen(true)} className="p-3 bg-[var(--glass-border)] hover:bg-[var(--glass-border)] text-[var(--text-main)] rounded-xl transition-all">
+                <button onClick={() => setIsFullscreen(true)} className="p-3 bg-[var(--glass-border)] hover:bg-blue-500/20 text-[var(--text-main)] rounded-xl transition-all" title="全屏预览">
                   <Maximize2 size={18} />
                 </button>
               </div>
@@ -334,6 +335,54 @@ const VersionItem: React.FC<{
               </div>
             </div>
           </div>
+
+          {/* Full Screen Preview Modal using React Portal to escape stacking context constraints */}
+          {isFullscreen && createPortal(
+            <div className="fixed inset-0 z-[9999] bg-slate-950 flex flex-col animate-in fade-in duration-300">
+              <header className="h-20 bg-slate-900/80 backdrop-blur-xl border-b border-white/10 flex items-center justify-between px-10 shrink-0">
+                <div className="flex items-center gap-6">
+                  <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white">
+                    <Laptop size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black text-white">设计全屏预览 v{index + 1}</h3>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">沉浸式交互模式</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="flex bg-slate-800 p-1 rounded-xl border border-white/5 mr-6">
+                    {(['mobile', 'tablet', 'desktop'] as const).map((d) => (
+                      <button 
+                        key={d}
+                        onClick={() => setPreviewDevice(d)}
+                        className={`p-2 rounded-lg transition-all ${previewDevice === d ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-white'}`}
+                      >
+                        {d === 'mobile' ? <Smartphone size={16} /> : d === 'tablet' ? <Tablet size={16} /> : <Laptop size={16} />}
+                      </button>
+                    ))}
+                  </div>
+                  <button 
+                    onClick={() => setIsFullscreen(false)} 
+                    className="flex items-center gap-2 px-6 py-3 bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-xl font-bold transition-all"
+                  >
+                    <Minimize2 size={18} /> 退出全屏
+                  </button>
+                </div>
+              </header>
+              <div className="flex-1 overflow-auto bg-slate-950 flex justify-center p-12 custom-scrollbar">
+                <div 
+                  className={`bg-white shadow-[0_0_100px_rgba(0,0,0,0.8)] overflow-hidden relative rounded-[3rem] border-[12px] border-slate-900 transition-all duration-500 ${
+                    previewDevice === 'mobile' ? 'w-[375px] h-[812px]' : 
+                    previewDevice === 'tablet' ? 'w-[768px] h-[1024px]' : 
+                    'w-full h-full'
+                  }`}
+                >
+                  <iframe src={blobUrl} sandbox="allow-scripts allow-modals allow-popups" className="w-full h-full border-none" />
+                </div>
+              </div>
+            </div>,
+            document.body
+          )}
         </div>
       );
     }
